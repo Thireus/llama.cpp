@@ -1936,6 +1936,14 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
         }
     ).set_env("LLAMA_ARG_CTX_CHECKPOINTS").set_examples({LLAMA_EXAMPLE_SERVER}));
     add_opt(common_arg(
+        {"--cache-ram", "-cram"}, "N",
+        string_format("set the maximum cache size in MiB (default: %d, -1 - no limit, 0 - disable)\n"
+            "[(more info)](https://github.com/ggml-org/llama.cpp/pull/16391)", params.cache_ram_mib),
+        [](common_params & params, int value) {
+            params.cache_ram_mib = value;
+        }
+    ).set_env("LLAMA_ARG_CACHE_RAM").set_examples({LLAMA_EXAMPLE_SERVER}));
+    add_opt(common_arg(
         {"--kv-unified", "-kvu"},
         string_format("use single unified KV buffer for the KV cache of all sequences (default: %s)\n"
             "[(more info)](https://github.com/ggml-org/llama.cpp/pull/14363)", params.kv_unified ? "true" : "false"),
@@ -3432,7 +3440,8 @@ common_params_context common_params_parser_init(common_params & params, llama_ex
         {"--reasoning-format"}, "FORMAT",
         "controls whether thought tags are allowed and/or extracted from the response, and in which format they're returned; one of:\n"
         "- none: leaves thoughts unparsed in `message.content`\n"
-        "- deepseek: puts thoughts in `message.reasoning_content` (except in streaming mode, which behaves as `none`)\n"
+        "- deepseek: puts thoughts in `message.reasoning_content`\n"
+        "- deepseek-legacy: keeps `<think>` tags in `message.content` while also populating `message.reasoning_content`\n"
         "(default: auto)",
         [](common_params & params, const std::string & value) {
             params.reasoning_format = common_reasoning_format_from_name(value);
