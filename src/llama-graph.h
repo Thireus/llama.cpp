@@ -684,6 +684,8 @@ struct llm_graph_context {
     ggml_tensor * build_inp_pos_bucket_dec() const;
     ggml_tensor * build_pos_bias(ggml_tensor * pos_bucket, ggml_tensor * attn_rel_b) const;
 
+    ggml_tensor * build_qwen3vl_inp_embd(ggml_tensor * tok_embd) const;
+
     //
     // attention
     //

@@ -5487,6 +5487,12 @@ static void ggml_mrope_cache_init(
     int sec_e = sections[2] + sec_w;
     GGML_ASSERT(sect_dims <= ne0);
 
+    // Qwen3VL: interleaved mrope, currently judged by the number of sections
+    bool is_interleaved_mrope = false;
+    if (sections[0] == 24 && sections[1] == 20 && sections[2] == 20) {
+        is_interleaved_mrope = true;
+    }
+
     for (int64_t i0 = 0; i0 < ne0; i0 += 2) {
         const float ff = freq_factors ? freq_factors[i0/2] : 1.0f;
 
@@ -5510,14 +5516,25 @@ static void ggml_mrope_cache_init(
 
         float theta = theta_t;
 
-        if (sector >= sections[0] && sector < sec_w) {
-            theta = theta_h;
-        }
-        else if (sector >= sec_w && sector < sec_w + sections[2]) {
-            theta = theta_w;
-        }
-        else if (sector >= sec_w + sections[2]) {
-            theta = theta_e;
+        if (is_interleaved_mrope) {
+            // thwthwthw...ttt
+            if (sector % 3 == 1 && sector < 3 * sections[1]) {
+                theta = theta_h;
+            } else if (sector % 3 == 2 && sector < 3 * sections[2]) {
+                theta = theta_w;
+            } else {
+                theta = theta_e;
+            }
+        } else {
+            if (sector >= sections[0] && sector < sec_w) {
+                theta = theta_h;
+            }
+            else if (sector >= sec_w && sector < sec_w + sections[2]) {
+                theta = theta_w;
+            }
+            else if (sector >= sec_w + sections[2]) {
+                theta = theta_e;
+            }
         }
 
         rope_yarn(

@@ -1141,6 +1141,55 @@ ggml_tensor * llm_graph_context::build_inp_embd(ggml_tensor * tok_embd) const {
     return cur;
 }
 
+// input embeddings with optional lora for qwen3vl series model
+ggml_tensor * llm_graph_context::build_qwen3vl_inp_embd(ggml_tensor * tok_embd) const {
+    const int64_t n_embd_full = hparams.n_embd; // main + 3 deepstack layers
+    const int64_t n_embd_main = n_embd_full / 4;
+
+    auto inp = std::make_unique<llm_graph_input_embd>();
+    ggml_tensor * cur = nullptr;
+
+    if (ubatch.token) {
+        // Pure text input: expand to 4*n_embd with zero deepstack
+        inp->tokens = ggml_new_tensor_1d(ctx0, GGML_TYPE_I32, ubatch.n_tokens);
+        ggml_set_input(inp->tokens);
+        res->t_tokens = inp->tokens;
+
+        // Get main embedding from token IDs
+        cur = ggml_get_rows(ctx0, tok_embd, inp->tokens);
+
+        // Apply LoRA if needed
+        for (const auto & lora : *loras) {
+            llama_adapter_lora_weight * lw = lora.first->get_weight(tok_embd);
+            if (lw == nullptr) continue;
+
+            const float adapter_scale = lora.second;
+            const float scale = lw->get_scale(lora.first->alpha, adapter_scale);
+            ggml_tensor * inpL_delta = ggml_scale(ctx0, ggml_mul_mat(
+                ctx0, lw->b,
+                ggml_get_rows(ctx0, lw->a, inp->tokens)
+            ), scale);
+            cur = ggml_add(ctx0, cur, inpL_delta);
+        }
+    } else {
+        // Custom embedding input (e.g., from image): assume already 4*n_embd
+        inp->embd = ggml_new_tensor_2d(ctx0, GGML_TYPE_F32, n_embd_full, ubatch.n_tokens);
+        ggml_set_input(inp->embd);
+        cur = inp->embd;
+    }
+
+    // Apply embedding scale if needed (e.g., Granite)
+    if (hparams.f_embedding_scale != 0.0f) {
+        cur = ggml_scale(ctx0, cur, hparams.f_embedding_scale);
+    }
+
+    // Register to graph and input system
+    cb(cur, "inp_embd_qwen3vl", -1);
+    res->add_input(std::move(inp));
+
+    return cur;
+}
+
 ggml_tensor * llm_graph_context::build_inp_pos() const {
     auto inp = std::make_unique<llm_graph_input_pos>(hparams.n_pos_per_embd());
 
