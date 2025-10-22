@@ -1196,7 +1196,7 @@ ggml_tensor * llm_graph_context::build_inp_embd(ggml_tensor * tok_embd) const {
 // input embeddings with optional lora for qwen3vl series model
 ggml_tensor * llm_graph_context::build_qwen3vl_inp_embd(ggml_tensor * tok_embd) const {
     const int64_t n_embd_full = hparams.n_embd; // main + 3 deepstack layers
-    const int64_t n_embd_main = n_embd_full / 4;
+    //const int64_t n_embd_main = n_embd_full / 4;
 
     auto inp = std::make_unique<llm_graph_input_embd>();
     ggml_tensor * cur = nullptr;
