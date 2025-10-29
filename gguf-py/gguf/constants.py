@@ -278,7 +278,7 @@ class Keys:
         USE_GELU            = "clip.use_gelu"
         USE_SILU            = "clip.use_silu"
         N_WA_PATTERN        = "clip.vision.n_wa_pattern" # used by qwen2.5vl
-        IS_DEEPSTACK_LAYERS    = "clip.vision.is_deepstack_layers"
+        IS_DEEPSTACK_LAYERS = "clip.vision.is_deepstack_layers"
 
         class Attention:
             HEAD_COUNT      = "clip.vision.attention.head_count"
@@ -614,6 +614,7 @@ class MODEL_TENSOR(IntEnum):
     V_ENC_EMBD_PATCH     = auto()
     V_ENC_EMBD_POS       = auto()
     V_ENC_INPUT_NORM     = auto()
+    V_ENC_ATTN_QKV       = auto()
     V_ENC_ATTN_Q         = auto()
     V_ENC_ATTN_Q_NORM    = auto()
     V_ENC_ATTN_K         = auto()
@@ -646,8 +647,8 @@ class MODEL_TENSOR(IntEnum):
     V_TOK_EMBD_IMG_BREAK = auto() # pixtral
     V_MM_PATCH_MERGER    = auto() # mistral small 3.1
     V_DS_NORM            = auto() # qwen3vl
-    V_DS_FC1            = auto() # qwen3vl
-    V_DS_FC2            = auto() # qwen3vl
+    V_DS_FC1             = auto() # qwen3vl
+    V_DS_FC2             = auto() # qwen3vl
     # audio (mtmd)
     A_ENC_EMBD_POS       = auto()
     A_ENC_CONV1D         = auto()
@@ -964,6 +965,7 @@ TENSOR_NAMES: dict[MODEL_TENSOR, str] = {
     MODEL_TENSOR.V_ENC_EMBD_CLS:            "v.class_embd",
     MODEL_TENSOR.V_ENC_EMBD_PATCH:          "v.patch_embd",
     MODEL_TENSOR.V_ENC_EMBD_POS:            "v.position_embd",
+    MODEL_TENSOR.V_ENC_ATTN_QKV:            "v.blk.{bid}.attn_qkv",
     MODEL_TENSOR.V_ENC_ATTN_Q:              "v.blk.{bid}.attn_q",
     MODEL_TENSOR.V_ENC_ATTN_Q_NORM:         "v.blk.{bid}.attn_q_norm",
     MODEL_TENSOR.V_ENC_ATTN_K:              "v.blk.{bid}.attn_k",
@@ -1036,6 +1038,7 @@ MODEL_TENSORS: dict[MODEL_ARCH, list[MODEL_TENSOR]] = {
         MODEL_TENSOR.V_ENC_EMBD_PATCH,
         MODEL_TENSOR.V_ENC_EMBD_POS,
         MODEL_TENSOR.V_ENC_INPUT_NORM,
+        MODEL_TENSOR.V_ENC_ATTN_QKV,
         MODEL_TENSOR.V_ENC_ATTN_Q,
         MODEL_TENSOR.V_ENC_ATTN_Q_NORM,
         MODEL_TENSOR.V_ENC_ATTN_K,
