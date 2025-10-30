@@ -5514,6 +5514,8 @@ static void ggml_mrope_cache_init(
                 theta = theta_h;
             } else if (sector % 3 == 2 && sector < 3 * sections[2]) {
                 theta = theta_w;
+            } else if (sector % 3 == 0 && sector < 3 * sections[0]) {
+                theta = theta_t;
             } else {
                 theta = theta_e;
             }
@@ -5599,7 +5601,7 @@ static void ggml_compute_forward_rope_f32(
 
     const bool is_neox = mode & GGML_ROPE_TYPE_NEOX;
     const bool is_mrope = mode & GGML_ROPE_TYPE_MROPE;  // ggml_rope_multi, multimodal rotary position embedding
-    const bool is_imrope = mode & GGML_ROPE_TYPE_IMROPE; // qwen3vl apply interleaved mrope
+    const bool is_imrope = mode == GGML_ROPE_TYPE_IMROPE; // qwen3vl apply interleaved mrope
     const bool is_vision = mode == GGML_ROPE_TYPE_VISION;
 
     if (is_mrope) {
@@ -5786,7 +5788,7 @@ static void ggml_compute_forward_rope_f16(
 
     const bool is_neox = mode & GGML_ROPE_TYPE_NEOX;
     const bool is_mrope = mode & GGML_ROPE_TYPE_MROPE;
-    const bool is_imrope = mode & GGML_ROPE_TYPE_IMROPE;
+    const bool is_imrope = mode == GGML_ROPE_TYPE_IMROPE;
     const bool is_vision = mode == GGML_ROPE_TYPE_VISION;
 
     if (is_mrope) {
