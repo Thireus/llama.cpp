@@ -7229,7 +7229,7 @@ struct test_l2_norm_batch : public test_case {
         if (strided) {
             parent = ggml_new_tensor_4d(ctx, type, ne[0], ne[1] * n_norms, ne[2], ne[3]);  // qkv buffer
         }
-        ggml_tensor * norms[8];
+        ggml_tensor * norms[8] = {};
         for (int t = 0; t < n_norms; ++t) {
             ggml_tensor * src;
             if (strided) {
@@ -10837,6 +10837,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
     for (int64_t n_kv : { 2048, 2304 }) {
         test_cases.emplace_back(new test_cont(
             GGML_TYPE_F32, {n_kv, 512, 64, 1}, false, {2, 1, 0, 3}));
+    }
+
+    // LEAKY_RELU at FFN activation width, for direct comparison with RELU
+    for (int64_t n_tokens : {512, 2048}) {
+        test_cases.emplace_back(new test_leaky_relu(GGML_TYPE_F32, { 17408, n_tokens, 1, 1 }, 0.1f));
     }
 
     // Conv2d: K=CRS=NPQ=4096 matmul performance
